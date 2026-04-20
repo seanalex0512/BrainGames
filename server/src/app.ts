@@ -3,6 +3,9 @@ import cors from 'cors';
 import { Server as SocketIOServer } from 'socket.io';
 import type { Server as HttpServer } from 'http';
 import type Database from 'better-sqlite3';
+import { join } from 'path';
+import { fileURLToPath } from 'url';
+import { existsSync } from 'fs';
 import { config } from './config.js';
 import { createDatabase, initializeSchema } from './db/index.js';
 import { SqliteQuizRepository, SqliteQuestionRepository, SqliteAnswerRepository } from './repositories/index.js';
@@ -14,6 +17,9 @@ import { createAnswerRouter } from './routes/answers.js';
 import { GameStore } from './socket/game-store.js';
 import { setupSocketHandlers, type HandlerDeps } from './socket/handlers.js';
 import type { ApiResponse, ServerToClientEvents, ClientToServerEvents } from '@braingames/shared';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+const clientDistPath = join(__dirname, '..', '..', '..', 'client', 'dist');
 
 export function createApp(db?: Database.Database) {
   const database = db ?? createDatabase(config.DB_PATH);
@@ -30,6 +36,11 @@ export function createApp(db?: Database.Database) {
   app.use(cors({ origin: config.CLIENT_URL }));
   app.use(express.json());
 
+  // Serve built React app in production
+  if (config.isProd && existsSync(clientDistPath)) {
+    app.use(express.static(clientDistPath));
+  }
+
   app.use('/api/health', healthRouter);
   // PDF import must be registered before the generic quiz router so
   // /api/quizzes/import-pdf is not matched by the /:id param route.
@@ -38,6 +49,13 @@ export function createApp(db?: Database.Database) {
   app.use('/api/quizzes/:quizId/questions', createQuestionRouter(repos));
   app.use('/api/questions', createDirectQuestionRouter({ question: questionRepo }));
   app.use('/api/questions/:questionId/answers', createAnswerRouter({ question: questionRepo, answer: answerRepo }));
+
+  // SPA fallback — serve index.html for non-API routes in production
+  if (config.isProd && existsSync(clientDistPath)) {
+    app.get('*', (_req: Request, res: Response) => {
+      res.sendFile(join(clientDistPath, 'index.html'));
+    });
+  }
 
   // Global error handler
   app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
