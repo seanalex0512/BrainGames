@@ -19,7 +19,7 @@ import { setupSocketHandlers, type HandlerDeps } from './socket/handlers.js';
 import type { ApiResponse, ServerToClientEvents, ClientToServerEvents } from '@braingames/shared';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const clientDistPath = join(__dirname, '..', '..', '..', 'client', 'dist');
+const clientDistPath = join(__dirname, '..', '..', 'client', 'dist');
 
 export function createApp(db?: Database.Database) {
   const database = db ?? createDatabase(config.DB_PATH);
