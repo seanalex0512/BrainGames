@@ -1,12 +1,12 @@
 import { createRequire } from 'module';
 import { Router, type Request, type Response } from 'express';
 import multer from 'multer';
-import Anthropic from '@anthropic-ai/sdk';
 
 // pdf-parse is CJS-only; use createRequire for ESM compatibility
 const require = createRequire(import.meta.url);
 type PdfParseResult = { text: string; numpages: number };
 const pdfParse = require('pdf-parse') as (buf: Buffer) => Promise<PdfParseResult>;
+
 import type { ApiResponse, Quiz } from '@braingames/shared';
 import type { QuizRepository } from '../repositories/quiz-repository.js';
 import type { QuestionRepository } from '../repositories/question-repository.js';
@@ -18,26 +18,23 @@ interface Repos {
   answer: AnswerRepository;
 }
 
-interface GeneratedAnswer {
+interface ParsedAnswer {
   text: string;
   isCorrect: boolean;
 }
 
-interface GeneratedQuestion {
+interface ParsedQuestion {
   text: string;
   type: 'multiple_choice' | 'true_false';
-  timeLimit: number;
+  timeLimit: 20;
   points: number;
-  answers: GeneratedAnswer[];
+  answers: ParsedAnswer[];
 }
 
-interface GeneratedQuiz {
+interface ParsedQuiz {
   title: string;
-  questions: GeneratedQuestion[];
+  questions: ParsedQuestion[];
 }
-
-const VALID_TIME_LIMITS = new Set([5, 10, 20, 30, 60]);
-const MAX_TEXT_CHARS = 8000; // ~2 k tokens — keep Haiku costs low
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -51,51 +48,83 @@ const upload = multer({
   },
 });
 
-// ── Validate + coerce Claude's JSON output ────────────────────────────────────
+// ── Heuristic parser ──────────────────────────────────────────────────────────
+//
+// Expected PDF format:
+//
+//   Quiz Title (first non-empty line)
+//
+//   1. Question text here?
+//   A) Option one
+//   B) Correct option *
+//   C) Option three
+//   D) Option four
+//
+// Rules:
+//   - Questions start with a number followed by . or ) e.g. "1." or "1)"
+//   - Options start with A-D followed by ) or . e.g. "A)" or "A."
+//   - Mark the correct answer with * at the end of the option line
+//   - True/False questions are auto-detected when only two options are True/False
 
-function parseGenerated(raw: unknown): GeneratedQuiz {
-  if (!raw || typeof raw !== 'object') throw new Error('Invalid response structure');
-  const obj = raw as Record<string, unknown>;
+const QUESTION_RE = /^\s*\d+[.)]\s+(.+)/;
+const OPTION_RE = /^\s*([A-Da-d])[.)]\s+(.+)/;
 
-  if (typeof obj['title'] !== 'string' || !obj['title'].trim()) throw new Error('Missing quiz title');
-  if (!Array.isArray(obj['questions']) || obj['questions'].length === 0) throw new Error('No questions generated');
+function parsePdfText(text: string, filename: string): ParsedQuiz {
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
 
-  const questions: GeneratedQuestion[] = (obj['questions'] as unknown[]).map((q, i) => {
-    if (!q || typeof q !== 'object') throw new Error(`Question ${i}: invalid`);
-    const qo = q as Record<string, unknown>;
+  // Use the first non-empty line as the title, fallback to filename
+  const title = lines[0] && !QUESTION_RE.test(lines[0]) ? lines[0] : filename.replace(/\.pdf$/i, '');
 
-    const text = typeof qo['text'] === 'string' ? qo['text'].trim() : '';
-    if (!text) throw new Error(`Question ${i}: missing text`);
+  const questions: ParsedQuestion[] = [];
+  let currentQuestion: string | null = null;
+  let currentOptions: ParsedAnswer[] = [];
 
-    const type: 'multiple_choice' | 'true_false' =
-      qo['type'] === 'true_false' ? 'true_false' : 'multiple_choice';
+  const flushQuestion = () => {
+    if (!currentQuestion || currentOptions.length < 2) return;
 
-    const timeLimit = VALID_TIME_LIMITS.has(qo['timeLimit'] as number)
-      ? (qo['timeLimit'] as number)
-      : 20;
+    const hasCorrect = currentOptions.some((o) => o.isCorrect);
+    // If nobody marked *, default first option as correct so the quiz is still importable
+    const answers = hasCorrect
+      ? currentOptions
+      : currentOptions.map((o, i) => ({ ...o, isCorrect: i === 0 }));
 
-    const points =
-      typeof qo['points'] === 'number' && qo['points'] > 0 ? qo['points'] : 1000;
+    const isTrueFalse =
+      answers.length === 2 &&
+      answers.every((a) => /^(true|false)$/i.test(a.text));
 
-    if (!Array.isArray(qo['answers'])) throw new Error(`Question ${i}: missing answers`);
-    const answers: GeneratedAnswer[] = (qo['answers'] as unknown[]).map((a) => {
-      if (!a || typeof a !== 'object') throw new Error(`Question ${i}: invalid answer`);
-      const ao = a as Record<string, unknown>;
-      return {
-        text: String(ao['text'] ?? '').trim(),
-        isCorrect: Boolean(ao['isCorrect']),
-      };
+    questions.push({
+      text: currentQuestion,
+      type: isTrueFalse ? 'true_false' : 'multiple_choice',
+      timeLimit: 20,
+      points: 1000,
+      answers,
     });
 
-    // Guarantee at least one correct answer
-    if (!answers.some((a) => a.isCorrect) && answers[0]) {
-      answers[0] = { ...answers[0], isCorrect: true };
+    currentQuestion = null;
+    currentOptions = [];
+  };
+
+  for (const line of lines) {
+    const qMatch = QUESTION_RE.exec(line);
+    if (qMatch) {
+      flushQuestion();
+      currentQuestion = qMatch[1]!.trim();
+      continue;
     }
 
-    return { text, type, timeLimit, points, answers };
-  });
+    const oMatch = OPTION_RE.exec(line);
+    if (oMatch && currentQuestion) {
+      const raw = oMatch[2]!.trim();
+      const isCorrect = raw.endsWith('*');
+      const optionText = isCorrect ? raw.slice(0, -1).trim() : raw;
+      currentOptions.push({ text: optionText, isCorrect });
+      continue;
+    }
+  }
 
-  return { title: obj['title'] as string, questions };
+  flushQuestion();
+
+  return { title, questions };
 }
 
 // ── Route factory ─────────────────────────────────────────────────────────────
@@ -118,16 +147,6 @@ export function createPdfImportRouter(repos: Repos): Router {
 }
 
 async function handleImport(req: Request, res: Response, repos: Repos): Promise<void> {
-  const apiKey = process.env['ANTHROPIC_API_KEY'];
-  if (!apiKey) {
-    const r: ApiResponse<null> = {
-      success: false, data: null,
-      error: 'ANTHROPIC_API_KEY is not set on the server',
-    };
-    res.status(400).json(r);
-    return;
-  }
-
   const file = (req as Request & { file?: Express.Multer.File }).file;
   if (!file) {
     const r: ApiResponse<null> = { success: false, data: null, error: 'No PDF file provided' };
@@ -139,7 +158,7 @@ async function handleImport(req: Request, res: Response, repos: Repos): Promise<
   let extractedText: string;
   try {
     const parsed = await pdfParse(file.buffer);
-    extractedText = parsed.text.slice(0, MAX_TEXT_CHARS).trim();
+    extractedText = parsed.text.trim();
   } catch (err) {
     console.error('[pdf-import] pdf-parse error:', err);
     const r: ApiResponse<null> = { success: false, data: null, error: 'Could not extract text from PDF' };
@@ -147,80 +166,36 @@ async function handleImport(req: Request, res: Response, repos: Repos): Promise<
     return;
   }
 
-  if (extractedText.length < 50) {
+  if (extractedText.length < 20) {
     const r: ApiResponse<null> = {
       success: false, data: null,
-      error: 'PDF contains too little readable text to generate questions',
+      error: 'PDF contains too little readable text',
     };
     res.status(400).json(r);
     return;
   }
 
-  // ── Call Claude ─────────────────────────────────────────────────────────────
-  let generated: GeneratedQuiz;
-  try {
-    const client = new Anthropic({ apiKey });
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2048,
-      messages: [{
-        role: 'user',
-        content: `You are a quiz generator. Read the text below and generate 5 to 10 quiz questions.
+  // ── Parse ────────────────────────────────────────────────────────────────────
+  const filename = file.originalname ?? 'Imported Quiz';
+  const parsed = parsePdfText(extractedText, filename);
 
-Return ONLY a valid JSON object — no markdown, no explanation, no extra text:
-{
-  "title": "Short descriptive quiz title",
-  "questions": [
-    {
-      "text": "Question text?",
-      "type": "multiple_choice",
-      "timeLimit": 20,
-      "points": 1000,
-      "answers": [
-        { "text": "Correct answer", "isCorrect": true },
-        { "text": "Distractor A", "isCorrect": false },
-        { "text": "Distractor B", "isCorrect": false },
-        { "text": "Distractor C", "isCorrect": false }
-      ]
-    }
-  ]
-}
-
-Rules:
-- multiple_choice: exactly 4 answers, exactly 1 correct
-- true_false: exactly 2 answers — "True" and "False"
-- timeLimit must be one of: 5, 10, 20, 30, 60
-- points: 1000 for all
-- Mix both types; prefer multiple_choice
-- Questions must be factual and clearly answered from the content
-
-Content:
-${extractedText}`,
-      }],
-    });
-
-    const raw = message.content[0]?.type === 'text' ? message.content[0].text : '';
-    // Strip optional markdown code fence
-    const json = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
-    generated = parseGenerated(JSON.parse(json) as unknown);
-  } catch (err) {
-    console.error('[pdf-import] Claude error:', err);
+  if (parsed.questions.length === 0) {
     const r: ApiResponse<null> = {
       success: false, data: null,
-      error: 'Failed to generate questions from the PDF content',
+      error: 'No questions found. Make sure your PDF uses the expected format: numbered questions (1.) with options (A) B) C) D)) and mark the correct answer with *',
     };
-    res.status(500).json(r);
+    res.status(400).json(r);
     return;
   }
 
   // ── Persist ─────────────────────────────────────────────────────────────────
-  const quiz = repos.quiz.create({ title: generated.title });
+  const quiz = repos.quiz.create({ title: parsed.title });
 
-  for (const [index, q] of generated.questions.entries()) {
+  for (const [index, q] of parsed.questions.entries()) {
     const question = repos.question.create(quiz.id, {
       type: q.type,
       text: q.text,
-      timeLimit: q.timeLimit as 20,
+      timeLimit: q.timeLimit,
       points: q.points,
       order: index,
     });
