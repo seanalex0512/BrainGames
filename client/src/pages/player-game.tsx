@@ -208,7 +208,7 @@ export function PlayerGame() {
               key={answer.id}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.94 }}
-              disabled={phase === 'answered'}
+              disabled={!!selectedAnswerId}
               onClick={() => {
                 const elapsed = questionStartRef.current !== null
                   ? (Date.now() - questionStartRef.current) / 1000
