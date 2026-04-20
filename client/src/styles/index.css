@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brain-purple: #46178f;
+  --color-brain-red: #e21b3c;
+  --color-brain-blue: #1368ce;
+  --color-brain-yellow: #d89e00;
+  --color-brain-green: #26890c;
+  --color-brain-correct: #66bf39;
+  --color-brain-accent: #cc0066;
+}
+
+@layer base {
+  body {
+    background-color: #46178f;
+    color: white;
+    font-family: sans-serif;
+  }
+}
