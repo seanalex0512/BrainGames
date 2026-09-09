@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
-import type { GameSession, Player, QuestionWithAnswers } from '@braingames/shared';
+import type { GameSession, GameSettings, Player, QuestionWithAnswers } from '@braingames/shared';
+import { DEFAULT_GAME_SETTINGS } from '@braingames/shared';
 
 export interface SessionAnswer {
   readonly playerId: string;
@@ -44,6 +45,7 @@ export class GameStore {
       currentQuestionIndex: 0,
       hostSocketId,
       createdAt: new Date().toISOString(),
+      settings: DEFAULT_GAME_SETTINGS,
     };
 
     this.sessions.set(session.id, session);
@@ -68,6 +70,14 @@ export class GameStore {
     const session = this.sessions.get(sessionId);
     if (!session) return null;
     const updated: GameSession = { ...session, status };
+    this.sessions.set(sessionId, updated);
+    return updated;
+  }
+
+  updateSettings(sessionId: string, settings: GameSettings): GameSession | null {
+    const session = this.sessions.get(sessionId);
+    if (!session) return null;
+    const updated: GameSession = { ...session, settings };
     this.sessions.set(sessionId, updated);
     return updated;
   }

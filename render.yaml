@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: braingames
+    runtime: node
+    buildCommand: npm install --include=dev && npm run build -w shared && npm run build -w server && npm run build -w client
+    startCommand: node server/dist/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: CLIENT_URL
+        sync: false

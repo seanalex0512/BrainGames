@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { GameSession, Player, GameCreatedPayload, PlayerJoinedPayload, PlayerLeftPayload, PlayerKickedPayload, GameStartedPayload, GameErrorPayload } from '@braingames/shared';
+import type { GameSession, GameSettings, Player, GameCreatedPayload, PlayerJoinedPayload, PlayerLeftPayload, PlayerKickedPayload, GameStartedPayload, GameErrorPayload } from '@braingames/shared';
+import { DEFAULT_GAME_SETTINGS } from '@braingames/shared';
 import { socket } from '../utils/socket-client';
 import { useGameStore } from './game-store';
 
@@ -13,6 +14,7 @@ interface LobbyState {
   players: Player[];
   selfPlayer: Player | null;
   error: string | null;
+  settings: GameSettings;
 }
 
 interface LobbyActions {
@@ -20,6 +22,7 @@ interface LobbyActions {
   joinGame: (pin: string, nickname: string) => void;
   kickPlayer: (playerId: string) => void;
   startGame: () => void;
+  updateSettings: (settings: Partial<GameSettings>) => void;
   reset: () => void;
 }
 
@@ -30,6 +33,7 @@ const initialState: LobbyState = {
   players: [],
   selfPlayer: null,
   error: null,
+  settings: DEFAULT_GAME_SETTINGS,
 };
 
 // Module-level cleanup so listeners aren't duplicated across store actions
@@ -121,9 +125,14 @@ export const useLobbyStore = create<LobbyState & LobbyActions>((set, get) => ({
   },
 
   startGame: () => {
-    const { session } = get();
+    const { session, settings } = get();
     if (!session) return;
-    socket.emit('game:start', { pin: session.pin });
+    socket.emit('game:start', { pin: session.pin, settings });
+  },
+
+  updateSettings: (partial) => {
+    const { settings } = get();
+    set({ settings: { ...settings, ...partial } });
   },
 
   reset: () => {

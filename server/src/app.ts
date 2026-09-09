@@ -7,7 +7,7 @@ import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync } from 'fs';
 import { config } from './config.js';
-import { createDatabase, initializeSchema } from './db/index.js';
+import { createDatabase, initializeSchema, seedIfEmpty } from './db/index.js';
 import { SqliteQuizRepository, SqliteQuestionRepository, SqliteAnswerRepository } from './repositories/index.js';
 import { healthRouter } from './routes/health.js';
 import { createQuizRouter } from './routes/quizzes.js';
@@ -23,7 +23,10 @@ const clientDistPath = join(__dirname, '..', '..', 'client', 'dist');
 
 export function createApp(db?: Database.Database) {
   const database = db ?? createDatabase(config.DB_PATH);
-  if (!db) initializeSchema(database);
+  if (!db) {
+    initializeSchema(database);
+    seedIfEmpty(database);
+  }
 
   const quizRepo = new SqliteQuizRepository(database);
   const questionRepo = new SqliteQuestionRepository(database);

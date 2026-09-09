@@ -94,6 +94,16 @@ export interface QuizWithQuestions {
 
 // --- Phase 2: Multiplayer ---
 
+export interface GameSettings {
+  readonly autoAdvance: boolean;
+  readonly timeLimitOverride: TimeLimit | null;
+}
+
+export const DEFAULT_GAME_SETTINGS: GameSettings = {
+  autoAdvance: false,
+  timeLimitOverride: null,
+};
+
 export interface GameSession {
   readonly id: string;
   readonly quizId: string;
@@ -102,6 +112,7 @@ export interface GameSession {
   readonly currentQuestionIndex: number;
   readonly hostSocketId: string;
   readonly createdAt: string;
+  readonly settings: GameSettings;
 }
 
 export interface Player {
@@ -168,7 +179,7 @@ export interface GameCreatePayload { readonly quizId: string; }
 export interface GameJoinPayload { readonly pin: string; readonly nickname: string; }
 export interface GameLeavePayload { readonly pin: string; }
 export interface PlayerKickPayload { readonly pin: string; readonly playerId: string; }
-export interface GameStartPayload { readonly pin: string; }
+export interface GameStartPayload { readonly pin: string; readonly settings: GameSettings; }
 export interface PlayerAnswerPayload { readonly pin: string; readonly answerId: string; readonly timeRemaining: number; }
 export interface HostEndQuestionPayload { readonly pin: string; }
 export interface HostNextQuestionPayload { readonly pin: string; }

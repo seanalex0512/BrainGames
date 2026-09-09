@@ -35,9 +35,11 @@ export function HostLobby() {
   const session = useLobbyStore((s) => s.session);
   const players = useLobbyStore((s) => s.players);
   const error = useLobbyStore((s) => s.error);
+  const settings = useLobbyStore((s) => s.settings);
   const createGame = useLobbyStore((s) => s.createGame);
   const kickPlayer = useLobbyStore((s) => s.kickPlayer);
   const startGame = useLobbyStore((s) => s.startGame);
+  const updateSettings = useLobbyStore((s) => s.updateSettings);
   const reset = useLobbyStore((s) => s.reset);
 
   useEffect(() => {
@@ -147,6 +149,43 @@ export function HostLobby() {
           </motion.button>
         </div>
       </div>
+
+      {/* Game settings */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/10 rounded-2xl p-5 mb-6 flex flex-col sm:flex-row gap-5"
+      >
+        <div className="flex-1">
+          <p className="text-white/60 text-xs font-semibold uppercase tracking-widest mb-2">Time Limit</p>
+          <select
+            value={settings.timeLimitOverride ?? ''}
+            onChange={(e) => updateSettings({ timeLimitOverride: e.target.value ? Number(e.target.value) as 5|10|20|30|60 : null })}
+            className="w-full bg-white/10 text-white rounded-lg px-3 py-2 text-sm font-semibold border border-white/20 focus:outline-none focus:border-white/50"
+          >
+            <option value="">Per question</option>
+            <option value="5">5 seconds</option>
+            <option value="10">10 seconds</option>
+            <option value="20">20 seconds</option>
+            <option value="30">30 seconds</option>
+            <option value="60">60 seconds</option>
+          </select>
+        </div>
+
+        <div className="flex-1">
+          <p className="text-white/60 text-xs font-semibold uppercase tracking-widest mb-2">Auto Advance</p>
+          <button
+            onClick={() => updateSettings({ autoAdvance: !settings.autoAdvance })}
+            className={`w-full rounded-lg px-3 py-2 text-sm font-semibold border transition-colors ${
+              settings.autoAdvance
+                ? 'bg-brain-correct/80 border-brain-correct text-white'
+                : 'bg-white/10 border-white/20 text-white/70 hover:bg-white/20'
+            }`}
+          >
+            {settings.autoAdvance ? 'On — next question after 5s' : 'Off — host clicks Next'}
+          </button>
+        </div>
+      </motion.div>
 
       {/* Player grid */}
       {players.length === 0 ? (

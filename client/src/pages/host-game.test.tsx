@@ -25,7 +25,7 @@ const mockSession: GameSession = {
   pin: '123456',
   status: 'playing',
   currentQuestionIndex: 0,
-  hostSocketId: 'host-socket',
+  hostSocketId: 'host-socket', settings: { autoAdvance: false, timeLimitOverride: null },
   createdAt: new Date().toISOString(),
 };
 

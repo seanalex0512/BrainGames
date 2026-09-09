@@ -18,6 +18,10 @@ import type {
 } from '@braingames/shared';
 import type { GameStore } from './game-store.js';
 
+// Tracks pending auto-advance timers keyed by `${sessionId}:${questionIndex}`
+const autoAdvanceTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const AUTO_ADVANCE_DELAY_MS = 5000;
+
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
@@ -27,13 +31,13 @@ export interface HandlerDeps {
 
 // ── Pure helpers ────────────────────────────────────────────────────────────
 
-function toPublicQuestion(q: QuestionWithAnswers, index: number, total: number): PublicQuestion {
+function toPublicQuestion(q: QuestionWithAnswers, index: number, total: number, timeLimitOverride: number | null = null): PublicQuestion {
   return {
     index,
     totalQuestions: total,
     text: q.text,
     type: q.type,
-    timeLimit: q.timeLimit,
+    timeLimit: (timeLimitOverride ?? q.timeLimit) as PublicQuestion['timeLimit'],
     points: q.points,
     answers: q.answers.map(({ id, text, order }) => ({ id, text, order })),
   };
@@ -105,6 +109,42 @@ function endQuestion(
       selectedAnswerId: answer?.answerId ?? null,
     };
     io.to(player.socketId).emit('question:ended', { distribution, correctAnswerId, leaderboard, playerResult });
+  }
+
+  // Auto-advance to next question after delay if enabled
+  if (session.settings.autoAdvance) {
+    const timerKey = `${sessionId}:${questionIndex}`;
+    const timer = setTimeout(() => {
+      autoAdvanceTimers.delete(timerKey);
+      advanceQuestion(io, store, sessionId, session.settings.timeLimitOverride);
+    }, AUTO_ADVANCE_DELAY_MS);
+    autoAdvanceTimers.set(timerKey, timer);
+  }
+}
+
+// ── Advance to next question or end game ─────────────────────────────────────
+
+function advanceQuestion(
+  io: TypedServer,
+  store: GameStore,
+  sessionId: string,
+  timeLimitOverride: number | null = null,
+): void {
+  const session = store.findById(sessionId);
+  if (!session || session.status !== 'playing') return;
+
+  const questions = store.getQuestions(sessionId);
+  const nextIndex = session.currentQuestionIndex + 1;
+
+  if (nextIndex >= questions.length) {
+    const players = store.getPlayers(sessionId);
+    store.setStatus(sessionId, 'finished');
+    io.to(session.pin).emit('game:ended', { leaderboard: buildLeaderboard(players) });
+  } else {
+    store.setCurrentQuestionIndex(sessionId, nextIndex);
+    io.to(session.pin).emit('question:started', {
+      question: toPublicQuestion(questions[nextIndex]!, nextIndex, questions.length, timeLimitOverride),
+    });
   }
 }
 
@@ -204,7 +244,7 @@ function registerHandlers(
   });
 
   socket.on('game:start', (payload: GameStartPayload) => {
-    const { pin } = payload ?? {};
+    const { pin, settings } = payload ?? {};
     if (!pin) {
       socket.emit('game:error', { message: 'pin is required' });
       return;
@@ -232,11 +272,13 @@ function registerHandlers(
       return;
     }
 
+    if (settings) store.updateSettings(session.id, settings);
     store.setQuestions(session.id, questions);
     const updated = store.setStatus(session.id, 'playing');
     if (!updated) return;
 
-    const firstQuestion = toPublicQuestion(questions[0]!, 0, questions.length);
+    const timeLimitOverride = settings?.timeLimitOverride ?? null;
+    const firstQuestion = toPublicQuestion(questions[0]!, 0, questions.length, timeLimitOverride);
     io.to(pin).emit('game:started', { session: updated, firstQuestion });
   });
 
@@ -314,19 +356,15 @@ function registerHandlers(
     const session = store.findByPin(pin);
     if (!session || session.hostSocketId !== socket.id) return;
 
-    const questions = store.getQuestions(session.id);
-    const nextIndex = session.currentQuestionIndex + 1;
-
-    if (nextIndex >= questions.length) {
-      const players = store.getPlayers(session.id);
-      store.setStatus(session.id, 'finished');
-      io.to(pin).emit('game:ended', { leaderboard: buildLeaderboard(players) });
-    } else {
-      store.setCurrentQuestionIndex(session.id, nextIndex);
-      io.to(pin).emit('question:started', {
-        question: toPublicQuestion(questions[nextIndex]!, nextIndex, questions.length),
-      });
+    // Cancel any pending auto-advance timer for this question
+    const timerKey = `${session.id}:${session.currentQuestionIndex}`;
+    const pending = autoAdvanceTimers.get(timerKey);
+    if (pending) {
+      clearTimeout(pending);
+      autoAdvanceTimers.delete(timerKey);
     }
+
+    advanceQuestion(io, store, session.id, session.settings.timeLimitOverride);
   });
 
   // Clean up player on disconnect
