@@ -35,7 +35,18 @@ export interface HandlerDeps {
 
 // ── Pure helpers ────────────────────────────────────────────────────────────
 
+/** Fisher-Yates shuffle — returns a new array. */
+function shuffle<T>(arr: ReadonlyArray<T>): T[] {
+  const out = [...arr];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j]!, out[i]!];
+  }
+  return out;
+}
+
 function toPublicQuestion(q: QuestionWithAnswers, index: number, total: number, timeLimitOverride: number | null = null): PublicQuestion {
+  const shuffled = shuffle(q.answers.map(({ id, text }) => ({ id, text })));
   return {
     index,
     totalQuestions: total,
@@ -43,7 +54,7 @@ function toPublicQuestion(q: QuestionWithAnswers, index: number, total: number, 
     type: q.type,
     timeLimit: (timeLimitOverride ?? q.timeLimit) as PublicQuestion['timeLimit'],
     points: q.points,
-    answers: q.answers.map(({ id, text, order }) => ({ id, text, order })),
+    answers: shuffled.map((a, i) => ({ ...a, order: i })),
   };
 }
 
