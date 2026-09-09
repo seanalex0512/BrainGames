@@ -22,6 +22,10 @@ import type { GameStore } from './game-store.js';
 const autoAdvanceTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const AUTO_ADVANCE_DELAY_MS = 5000;
 
+// Server-side question deadline timers — guarantees question ends even if host lags
+const questionDeadlineTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const DEADLINE_BUFFER_MS = 2000; // extra grace period beyond time limit
+
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
@@ -60,6 +64,37 @@ function buildLeaderboard(players: ReturnType<GameStore['getPlayers']>): Leaderb
     .map(({ id, nickname, avatarColor, score, streak }) => ({ id, nickname, avatarColor, score, streak }));
 }
 
+// ── Server-side question deadline ────────────────────────────────────────────
+
+function startQuestionDeadline(
+  io: TypedServer,
+  store: GameStore,
+  sessionId: string,
+  questionIndex: number,
+  timeLimitSeconds: number,
+): void {
+  const timerKey = `${sessionId}:${questionIndex}`;
+  // Clear any existing deadline for this question
+  const existing = questionDeadlineTimers.get(timerKey);
+  if (existing) clearTimeout(existing);
+
+  const deadlineMs = (timeLimitSeconds * 1000) + DEADLINE_BUFFER_MS;
+  const timer = setTimeout(() => {
+    questionDeadlineTimers.delete(timerKey);
+    endQuestion(io, store, sessionId, questionIndex);
+  }, deadlineMs);
+  questionDeadlineTimers.set(timerKey, timer);
+}
+
+function clearQuestionDeadline(sessionId: string, questionIndex: number): void {
+  const timerKey = `${sessionId}:${questionIndex}`;
+  const timer = questionDeadlineTimers.get(timerKey);
+  if (timer) {
+    clearTimeout(timer);
+    questionDeadlineTimers.delete(timerKey);
+  }
+}
+
 // ── Question end logic ───────────────────────────────────────────────────────
 
 function endQuestion(
@@ -70,6 +105,7 @@ function endQuestion(
 ): void {
   if (store.isQuestionEnded(sessionId, questionIndex)) return;
   store.markQuestionEnded(sessionId, questionIndex);
+  clearQuestionDeadline(sessionId, questionIndex);
 
   const questions = store.getQuestions(sessionId);
   const question = questions[questionIndex];
@@ -142,9 +178,11 @@ function advanceQuestion(
     io.to(session.pin).emit('game:ended', { leaderboard: buildLeaderboard(players) });
   } else {
     store.setCurrentQuestionIndex(sessionId, nextIndex);
-    io.to(session.pin).emit('question:started', {
-      question: toPublicQuestion(questions[nextIndex]!, nextIndex, questions.length, timeLimitOverride),
-    });
+    const publicQ = toPublicQuestion(questions[nextIndex]!, nextIndex, questions.length, timeLimitOverride);
+    io.to(session.pin).emit('question:started', { question: publicQ });
+
+    // Start server-side deadline for next question
+    startQuestionDeadline(io, store, sessionId, nextIndex, publicQ.timeLimit);
   }
 }
 
@@ -280,6 +318,10 @@ function registerHandlers(
     const timeLimitOverride = settings?.timeLimitOverride ?? null;
     const firstQuestion = toPublicQuestion(questions[0]!, 0, questions.length, timeLimitOverride);
     io.to(pin).emit('game:started', { session: updated, firstQuestion });
+
+    // Start server-side deadline for first question
+    const effectiveTimeLimit = timeLimitOverride ?? questions[0]!.timeLimit;
+    startQuestionDeadline(io, store, session.id, 0, effectiveTimeLimit);
   });
 
   socket.on('player:answer', (payload: PlayerAnswerPayload) => {
