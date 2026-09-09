@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-const ADMIN_PASSWORD = 'Bs109400!';
+const ADMIN_PASSWORD = 'Sa2002125!';
 const STORAGE_KEY = 'braingames_admin';
 
 interface AuthState {
