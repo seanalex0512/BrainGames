@@ -111,7 +111,7 @@ export function HostLobby() {
           {session.pin}
         </motion.p>
         <p className="text-white/50 mt-3 text-sm">
-          Players join at <span className="text-white font-semibold">braingames.app/join</span>
+          Players join at <span className="text-white font-semibold">braingames-sjsg.onrender.com</span>
         </p>
       </motion.div>
 
