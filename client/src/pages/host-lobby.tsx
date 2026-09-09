@@ -73,7 +73,7 @@ export function HostLobby() {
       <div className="flex flex-col items-center justify-center min-h-64 gap-4">
         <p className="text-white/70 text-lg">{error ?? 'Failed to create game'}</p>
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/admin')}
           className="px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30"
         >
           Back to Library
@@ -133,7 +133,7 @@ export function HostLobby() {
 
         <div className="flex gap-3">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/admin')}
             className="px-4 py-2 text-white/70 hover:text-white text-sm transition-colors"
           >
             Cancel

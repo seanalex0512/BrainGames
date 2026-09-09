@@ -58,7 +58,7 @@ export function SoloPlay() {
       <div className="flex flex-col items-center justify-center min-h-64 gap-4">
         <p className="text-white/70">Failed to load quiz. Please try again.</p>
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/admin')}
           className="px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30"
         >
           Back to Library
@@ -82,7 +82,7 @@ export function SoloPlay() {
         score={score}
         results={results}
         onPlayAgain={() => { if (id) void loadQuiz(id); }}
-        onHome={() => navigate('/')}
+        onHome={() => navigate('/admin')}
       />
     );
   }

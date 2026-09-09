@@ -142,7 +142,7 @@ export function HostGame() {
         onBack={() => {
           resetLobby();
           resetGame();
-          navigate('/');
+          navigate('/admin');
         }}
       />
     );

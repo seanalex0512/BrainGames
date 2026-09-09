@@ -20,55 +20,55 @@ interface SeedQuestion {
 const SEED_QUESTIONS: ReadonlyArray<SeedQuestion> = [
   // ─── HTML & CSS (5) ───
   {
-    text: 'Which CSS selector targets an element with id="main"?',
+    text: 'What does the <meta charset="UTF-8"> tag do in an HTML document?',
     type: 'multiple_choice',
     timeLimit: 20,
     points: 1000,
     answers: [
-      { text: '.main', isCorrect: false },
-      { text: '#main', isCorrect: true },
-      { text: '*main', isCorrect: false },
-      { text: '@main', isCorrect: false },
+      { text: 'Sets the page background color', isCorrect: false },
+      { text: 'Specifies the character encoding for the document', isCorrect: true },
+      { text: 'Links an external stylesheet', isCorrect: false },
+      { text: 'Defines the page title shown in the browser tab', isCorrect: false },
     ],
   },
   {
-    text: 'What is the default display value of a <span> element?',
+    text: 'Which CSS property is used to make text uppercase without changing the HTML?',
     type: 'multiple_choice',
     timeLimit: 20,
     points: 1000,
     answers: [
-      { text: 'block', isCorrect: false },
-      { text: 'inline-block', isCorrect: false },
-      { text: 'inline', isCorrect: true },
-      { text: 'flex', isCorrect: false },
+      { text: 'font-style: uppercase', isCorrect: false },
+      { text: 'text-transform: uppercase', isCorrect: true },
+      { text: 'font-variant: caps', isCorrect: false },
+      { text: 'text-decoration: uppercase', isCorrect: false },
     ],
   },
   {
-    text: 'Which HTML attribute is used to provide alternative text for an image?',
+    text: 'What is the purpose of the z-index property in CSS?',
     type: 'multiple_choice',
     timeLimit: 20,
     points: 1000,
     answers: [
-      { text: 'title', isCorrect: false },
-      { text: 'src', isCorrect: false },
-      { text: 'alt', isCorrect: true },
-      { text: 'name', isCorrect: false },
+      { text: 'Controls the zoom level of an element', isCorrect: false },
+      { text: 'Sets the horizontal position of an element', isCorrect: false },
+      { text: 'Controls the stacking order of overlapping elements', isCorrect: true },
+      { text: 'Defines the number of columns in a grid', isCorrect: false },
     ],
   },
   {
-    text: 'What does the CSS property "box-sizing: border-box" do?',
+    text: 'Which HTML element is used to group inline elements for styling?',
     type: 'multiple_choice',
-    timeLimit: 30,
+    timeLimit: 20,
     points: 1000,
     answers: [
-      { text: 'Includes padding and border in the element\'s total width/height', isCorrect: true },
-      { text: 'Adds a border around the box', isCorrect: false },
-      { text: 'Removes all margins', isCorrect: false },
-      { text: 'Makes the element a block element', isCorrect: false },
+      { text: '<section>', isCorrect: false },
+      { text: '<div>', isCorrect: false },
+      { text: '<p>', isCorrect: false },
+      { text: '<span>', isCorrect: true },
     ],
   },
   {
-    text: 'The <div> tag is an inline element by default.',
+    text: 'The CSS property "position: absolute" positions an element relative to the browser window.',
     type: 'true_false',
     timeLimit: 10,
     points: 1000,
@@ -80,239 +80,55 @@ const SEED_QUESTIONS: ReadonlyArray<SeedQuestion> = [
 
   // ─── JavaScript Arrays (5) ───
   {
-    text: 'What does [1,2,3].splice(1, 1) return?',
+    text: 'What does [10, 20, 30].slice(0, 2) return?',
     type: 'multiple_choice',
     timeLimit: 30,
     points: 1000,
     answers: [
-      { text: '[1, 3]', isCorrect: false },
-      { text: '[2]', isCorrect: true },
-      { text: '[1, 2]', isCorrect: false },
-      { text: '[3]', isCorrect: false },
+      { text: '[20, 30]', isCorrect: false },
+      { text: '[10, 20, 30]', isCorrect: false },
+      { text: '[10, 20]', isCorrect: true },
+      { text: '[10]', isCorrect: false },
     ],
   },
   {
-    text: 'What is the output of ["a","b","c"].indexOf("d")?',
+    text: 'After let arr = [5, 10]; arr.push(15); arr.pop(); what is arr?',
+    type: 'multiple_choice',
+    timeLimit: 30,
+    points: 1000,
+    answers: [
+      { text: '[5, 10, 15]', isCorrect: false },
+      { text: '[5, 10]', isCorrect: true },
+      { text: '[5, 15]', isCorrect: false },
+      { text: '[10, 15]', isCorrect: false },
+    ],
+  },
+  {
+    text: 'What is the result of ["cat", "dog", "bird"].includes("Cat")?',
     type: 'multiple_choice',
     timeLimit: 20,
     points: 1000,
     answers: [
-      { text: 'undefined', isCorrect: false },
-      { text: 'false', isCorrect: false },
-      { text: '-1', isCorrect: true },
-      { text: 'null', isCorrect: false },
-    ],
-  },
-  {
-    text: 'What does [1,2,3].concat([4,5]) return?',
-    type: 'multiple_choice',
-    timeLimit: 20,
-    points: 1000,
-    answers: [
-      { text: '[1,2,3,4,5]', isCorrect: true },
-      { text: '[[1,2,3],[4,5]]', isCorrect: false },
-      { text: '[1,2,3,[4,5]]', isCorrect: false },
-      { text: 'Error', isCorrect: false },
-    ],
-  },
-  {
-    text: 'After let arr = [1,2,3]; arr.unshift(0); what is arr?',
-    type: 'multiple_choice',
-    timeLimit: 30,
-    points: 1000,
-    answers: [
-      { text: '[1,2,3,0]', isCorrect: false },
-      { text: '[0,1,2,3]', isCorrect: true },
-      { text: '[0,2,3]', isCorrect: false },
-      { text: '[1,2,0]', isCorrect: false },
-    ],
-  },
-  {
-    text: '.splice() modifies the original array.',
-    type: 'true_false',
-    timeLimit: 10,
-    points: 1000,
-    answers: [
-      { text: 'True', isCorrect: true },
-      { text: 'False', isCorrect: false },
-    ],
-  },
-
-  // ─── JavaScript Loops (3) ───
-  {
-    text: 'What is the value of x after this runs?\nlet x = 0;\nfor (let i = 1; i <= 3; i++) { x += i; }',
-    type: 'multiple_choice',
-    timeLimit: 30,
-    points: 1000,
-    answers: [
-      { text: '3', isCorrect: false },
-      { text: '5', isCorrect: false },
-      { text: '6', isCorrect: true },
-      { text: '10', isCorrect: false },
-    ],
-  },
-  {
-    text: 'What does "continue" do inside a loop?',
-    type: 'multiple_choice',
-    timeLimit: 20,
-    points: 1000,
-    answers: [
-      { text: 'Exits the loop', isCorrect: false },
-      { text: 'Restarts the loop from the beginning', isCorrect: false },
-      { text: 'Skips the rest of the current iteration', isCorrect: true },
-      { text: 'Pauses execution for 1 second', isCorrect: false },
-    ],
-  },
-  {
-    text: 'How many times will this run?\nlet i = 10;\nwhile (i < 5) { i++; }',
-    type: 'multiple_choice',
-    timeLimit: 30,
-    points: 1000,
-    answers: [
-      { text: '5', isCorrect: false },
-      { text: '10', isCorrect: false },
-      { text: '0', isCorrect: true },
-      { text: 'Infinite', isCorrect: false },
-    ],
-  },
-
-  // ─── JavaScript If/Else & Logic (2) ───
-  {
-    text: 'What is the output?\nlet a = "5";\nif (a === 5) { console.log("yes"); } else { console.log("no"); }',
-    type: 'multiple_choice',
-    timeLimit: 30,
-    points: 1000,
-    answers: [
-      { text: 'yes', isCorrect: false },
-      { text: 'no', isCorrect: true },
+      { text: 'true', isCorrect: false },
+      { text: 'false', isCorrect: true },
       { text: 'undefined', isCorrect: false },
       { text: 'Error', isCorrect: false },
     ],
   },
   {
-    text: 'Which value is NOT falsy in JavaScript?',
-    type: 'multiple_choice',
-    timeLimit: 20,
-    points: 1000,
-    answers: [
-      { text: '0', isCorrect: false },
-      { text: '""', isCorrect: false },
-      { text: '"false"', isCorrect: true },
-      { text: 'null', isCorrect: false },
-    ],
-  },
-
-  // ─── PHP (5) ───
-  {
-    text: 'What is the output of: echo 5 + "3 apples";',
+    text: 'What does [3, 1, 4, 1, 5].filter(n => n > 2) return?',
     type: 'multiple_choice',
     timeLimit: 30,
     points: 1000,
     answers: [
-      { text: '53 apples', isCorrect: false },
-      { text: '8', isCorrect: true },
-      { text: 'Error', isCorrect: false },
-      { text: '5', isCorrect: false },
+      { text: '[3, 4, 5]', isCorrect: true },
+      { text: '[1, 1]', isCorrect: false },
+      { text: '[3, 1, 4, 1, 5]', isCorrect: false },
+      { text: '[4, 5]', isCorrect: false },
     ],
   },
   {
-    text: 'Which PHP function returns the number of elements in an array?',
-    type: 'multiple_choice',
-    timeLimit: 20,
-    points: 1000,
-    answers: [
-      { text: 'length()', isCorrect: false },
-      { text: 'size()', isCorrect: false },
-      { text: 'array_length()', isCorrect: false },
-      { text: 'count()', isCorrect: true },
-    ],
-  },
-  {
-    text: 'What is the correct way to create an array in PHP?',
-    type: 'multiple_choice',
-    timeLimit: 20,
-    points: 1000,
-    answers: [
-      { text: '$arr = array(1, 2, 3);', isCorrect: true },
-      { text: '$arr = [1, 2, 3]', isCorrect: false },
-      { text: 'Both of the above', isCorrect: false },
-      { text: 'Neither of the above', isCorrect: false },
-    ],
-  },
-  {
-    text: 'What does the . operator do in PHP?',
-    type: 'multiple_choice',
-    timeLimit: 20,
-    points: 1000,
-    answers: [
-      { text: 'Addition', isCorrect: false },
-      { text: 'String concatenation', isCorrect: true },
-      { text: 'Object access', isCorrect: false },
-      { text: 'Comparison', isCorrect: false },
-    ],
-  },
-  {
-    text: 'In PHP, variables are case-sensitive.',
-    type: 'true_false',
-    timeLimit: 10,
-    points: 1000,
-    answers: [
-      { text: 'True', isCorrect: true },
-      { text: 'False', isCorrect: false },
-    ],
-  },
-
-  // ─── CSS Flexbox (5) ───
-  {
-    text: 'What does flex-wrap: wrap do?',
-    type: 'multiple_choice',
-    timeLimit: 20,
-    points: 1000,
-    answers: [
-      { text: 'Prevents items from shrinking', isCorrect: false },
-      { text: 'Allows items to wrap to the next line', isCorrect: true },
-      { text: 'Reverses the item order', isCorrect: false },
-      { text: 'Makes items equal width', isCorrect: false },
-    ],
-  },
-  {
-    text: 'Which flex property makes one item take up twice the space of others?',
-    type: 'multiple_choice',
-    timeLimit: 20,
-    points: 1000,
-    answers: [
-      { text: 'flex-basis: 200%', isCorrect: false },
-      { text: 'flex-grow: 2', isCorrect: true },
-      { text: 'flex-size: double', isCorrect: false },
-      { text: 'flex-width: 2x', isCorrect: false },
-    ],
-  },
-  {
-    text: 'What does align-self do in flexbox?',
-    type: 'multiple_choice',
-    timeLimit: 20,
-    points: 1000,
-    answers: [
-      { text: 'Aligns all items along the main axis', isCorrect: false },
-      { text: 'Aligns the container itself', isCorrect: false },
-      { text: 'Overrides align-items for a single item', isCorrect: true },
-      { text: 'Centers the element horizontally', isCorrect: false },
-    ],
-  },
-  {
-    text: 'What is the shorthand for flex-grow: 1, flex-shrink: 1, flex-basis: 0?',
-    type: 'multiple_choice',
-    timeLimit: 30,
-    points: 1000,
-    answers: [
-      { text: 'flex: auto', isCorrect: false },
-      { text: 'flex: 1', isCorrect: true },
-      { text: 'flex: 0 1 auto', isCorrect: false },
-      { text: 'flex: initial', isCorrect: false },
-    ],
-  },
-  {
-    text: 'In flexbox, the cross axis is always vertical.',
+    text: 'The .slice() method modifies the original array.',
     type: 'true_false',
     timeLimit: 10,
     points: 1000,
@@ -321,19 +137,203 @@ const SEED_QUESTIONS: ReadonlyArray<SeedQuestion> = [
       { text: 'False', isCorrect: true },
     ],
   },
+
+  // ─── JavaScript Loops (3) ───
+  {
+    text: 'What will this code print?\nlet total = 1;\nfor (let i = 0; i < 4; i++) { total *= 2; }\nconsole.log(total);',
+    type: 'multiple_choice',
+    timeLimit: 30,
+    points: 1000,
+    answers: [
+      { text: '8', isCorrect: false },
+      { text: '4', isCorrect: false },
+      { text: '16', isCorrect: true },
+      { text: '32', isCorrect: false },
+    ],
+  },
+  {
+    text: 'What is the output?\nfor (let i = 5; i >= 1; i--) { if (i === 3) break; }\nconsole.log(i);',
+    type: 'multiple_choice',
+    timeLimit: 30,
+    points: 1000,
+    answers: [
+      { text: '3', isCorrect: false },
+      { text: '1', isCorrect: false },
+      { text: '5', isCorrect: false },
+      { text: 'ReferenceError', isCorrect: true },
+    ],
+  },
+  {
+    text: 'How many times does this loop run?\nlet count = 0;\ndo { count++; } while (count < 1);',
+    type: 'multiple_choice',
+    timeLimit: 30,
+    points: 1000,
+    answers: [
+      { text: '0', isCorrect: false },
+      { text: '1', isCorrect: true },
+      { text: '2', isCorrect: false },
+      { text: 'Infinite', isCorrect: false },
+    ],
+  },
+
+  // ─── JavaScript If/Else & Logic (2) ───
+  {
+    text: 'What is the value of result?\nlet x = 7;\nlet result = (x > 5 && x < 10) ? "yes" : "no";',
+    type: 'multiple_choice',
+    timeLimit: 30,
+    points: 1000,
+    answers: [
+      { text: '"no"', isCorrect: false },
+      { text: 'undefined', isCorrect: false },
+      { text: '"yes"', isCorrect: true },
+      { text: 'true', isCorrect: false },
+    ],
+  },
+  {
+    text: 'What does this return?\nBoolean([] && "" && 0)',
+    type: 'multiple_choice',
+    timeLimit: 30,
+    points: 1000,
+    answers: [
+      { text: 'true', isCorrect: false },
+      { text: 'false', isCorrect: true },
+      { text: '0', isCorrect: false },
+      { text: '""', isCorrect: false },
+    ],
+  },
+
+  // ─── PHP (5) ───
+  {
+    text: 'What is the output of: $x = "10"; echo $x + 5 . " items";',
+    type: 'multiple_choice',
+    timeLimit: 30,
+    points: 1000,
+    answers: [
+      { text: '105 items', isCorrect: false },
+      { text: '15 items', isCorrect: true },
+      { text: '10 + 5 items', isCorrect: false },
+      { text: 'Error', isCorrect: false },
+    ],
+  },
+  {
+    text: 'Which PHP function checks if a key exists in an associative array?',
+    type: 'multiple_choice',
+    timeLimit: 20,
+    points: 1000,
+    answers: [
+      { text: 'in_array()', isCorrect: false },
+      { text: 'isset()', isCorrect: false },
+      { text: 'array_key_exists()', isCorrect: true },
+      { text: 'array_has()', isCorrect: false },
+    ],
+  },
+  {
+    text: 'What does the === operator do in PHP?',
+    type: 'multiple_choice',
+    timeLimit: 20,
+    points: 1000,
+    answers: [
+      { text: 'Assigns a value', isCorrect: false },
+      { text: 'Compares values only', isCorrect: false },
+      { text: 'Compares both value and type', isCorrect: true },
+      { text: 'Checks if a variable is set', isCorrect: false },
+    ],
+  },
+  {
+    text: 'What is the output of: echo substr("Hello World", 6);',
+    type: 'multiple_choice',
+    timeLimit: 20,
+    points: 1000,
+    answers: [
+      { text: 'Hello', isCorrect: false },
+      { text: 'World', isCorrect: true },
+      { text: 'o Worl', isCorrect: false },
+      { text: ' World', isCorrect: false },
+    ],
+  },
+  {
+    text: 'In PHP, function names are case-sensitive.',
+    type: 'true_false',
+    timeLimit: 10,
+    points: 1000,
+    answers: [
+      { text: 'True', isCorrect: false },
+      { text: 'False', isCorrect: true },
+    ],
+  },
+
+  // ─── CSS Flexbox (5) ───
+  {
+    text: 'Which property do you set on the PARENT to make its children flex items?',
+    type: 'multiple_choice',
+    timeLimit: 20,
+    points: 1000,
+    answers: [
+      { text: 'flex-item: true', isCorrect: false },
+      { text: 'display: flex', isCorrect: true },
+      { text: 'position: flex', isCorrect: false },
+      { text: 'flex: enable', isCorrect: false },
+    ],
+  },
+  {
+    text: 'What is the default value of flex-direction?',
+    type: 'multiple_choice',
+    timeLimit: 20,
+    points: 1000,
+    answers: [
+      { text: 'column', isCorrect: false },
+      { text: 'row-reverse', isCorrect: false },
+      { text: 'row', isCorrect: true },
+      { text: 'inherit', isCorrect: false },
+    ],
+  },
+  {
+    text: 'Which property controls spacing BETWEEN flex items (not around them)?',
+    type: 'multiple_choice',
+    timeLimit: 20,
+    points: 1000,
+    answers: [
+      { text: 'margin: auto', isCorrect: false },
+      { text: 'justify-content: space-between', isCorrect: true },
+      { text: 'align-items: space-between', isCorrect: false },
+      { text: 'flex-gap: even', isCorrect: false },
+    ],
+  },
+  {
+    text: 'If flex-direction is "column", which axis does justify-content control?',
+    type: 'multiple_choice',
+    timeLimit: 30,
+    points: 1000,
+    answers: [
+      { text: 'Horizontal axis', isCorrect: false },
+      { text: 'Both axes equally', isCorrect: false },
+      { text: 'Vertical axis', isCorrect: true },
+      { text: 'Neither — it has no effect in column mode', isCorrect: false },
+    ],
+  },
+  {
+    text: 'The "gap" property in flexbox adds space between items without adding space at the edges.',
+    type: 'true_false',
+    timeLimit: 10,
+    points: 1000,
+    answers: [
+      { text: 'True', isCorrect: true },
+      { text: 'False', isCorrect: false },
+    ],
+  },
 ];
 
-/** Seeds the database with a single quiz containing all questions if no quizzes exist yet. */
+/** Clears all quizzes and re-seeds with the latest question set. */
 export function seedIfEmpty(db: Database.Database): void {
   const quizRepo = new SqliteQuizRepository(db);
   const questionRepo = new SqliteQuestionRepository(db);
   const answerRepo = new SqliteAnswerRepository(db);
 
-  const existing = quizRepo.findAll();
-  if (existing.length > 0) {
-    console.log(`[seed] Database already has ${existing.length} quizzes — skipping seed.`);
-    return;
-  }
+  // Delete all existing data so only the latest seed questions remain
+  db.exec('DELETE FROM answers');
+  db.exec('DELETE FROM questions');
+  db.exec('DELETE FROM quizzes');
+  console.log('[seed] Cleared all existing quiz data.');
 
   const quiz = quizRepo.create({
     title: 'Web Development Fundamentals',

@@ -91,7 +91,7 @@ export function QuizCreator() {
       }
     }
 
-    navigate('/');
+    navigate('/admin');
   }
 
   return (
@@ -105,7 +105,7 @@ export function QuizCreator() {
           {isEdit ? 'Edit Quiz' : 'New Quiz'}
         </motion.h1>
         <div className="flex gap-3">
-          <Button variant="ghost" onClick={() => navigate('/')}>
+          <Button variant="ghost" onClick={() => navigate('/admin')}>
             Cancel
           </Button>
           <Button
